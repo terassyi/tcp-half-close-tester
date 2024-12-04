@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"io"
 	"log/slog"
 	"net"
 	"os"
@@ -63,20 +64,68 @@ func (s *Server) Run(ctx context.Context) error {
 			return fmt.Errorf("failed to accept: %w", err)
 		}
 
+		closeReadChan := make(chan struct{})
+		closeWriteChan := make(chan struct{})
+
 		go func() {
 			defer conn.Close()
+
 			file, err := os.Open(s.cfg.File)
 			if err != nil {
 				log.ErrorContext(ctx, "failed to open file", slog.Any("error", err), slog.String("file", s.cfg.File))
 				return
 			}
-			defer file.Close()
+			defer func() {
+				file.Close()
+				closeWriteChan <- struct{}{}
+			}()
 
 			streamer := streamer.New(conn, file, s.cfg.Chunk, log)
 
 			if err := streamer.Stream(ctx); err != nil {
 				log.ErrorContext(ctx, "failed to stream data", slog.Any("error", err))
 				return
+			}
+		}()
+
+		go func() {
+			total := 0
+			buf := make([]byte, 1024)
+
+			defer func() {
+				closeReadChan <- struct{}{}
+			}()
+
+			for {
+				l, err := conn.Read(buf)
+				if err != nil {
+					if err == io.EOF {
+						log.InfoContext(ctx, "got EOF in reader", slog.Int("total", total))
+						return
+					}
+					log.ErrorContext(ctx, "failed to read from client", slog.Any("error", err))
+					return
+				}
+				total += l
+				log.DebugContext(ctx, "read from client", slog.Int("size", l), slog.Int("total", total))
+			}
+		}()
+
+		go func() {
+			closeRead, closeWrite := false, false
+			for {
+				select {
+				case <-closeReadChan:
+					closeRead = true
+				case <-closeWriteChan:
+					closeWrite = true
+				default:
+					if closeRead && closeWrite {
+						log.InfoContext(ctx, "close server side connection")
+						conn.Close()
+						return
+					}
+				}
 			}
 		}()
 	}

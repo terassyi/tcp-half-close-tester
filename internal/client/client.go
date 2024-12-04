@@ -95,13 +95,15 @@ func (c *Client) readFromConn(ctx context.Context, conn *net.TCPConn, dataChan c
 
 	buf := make([]byte, c.cfg.BufSize)
 
-	total := 0
+	readTotal := 0
+	writeTotal := 0
+	writeClosed := false
 
 	for {
 		readSize, err := conn.Read(buf)
 		if err != nil {
 			if err == io.EOF {
-				log.InfoContext(ctx, "got EOF", slog.Int("total", total))
+				log.InfoContext(ctx, "got EOF in reader", slog.Int("total", readTotal))
 				done <- nil
 				return
 			}
@@ -110,9 +112,23 @@ func (c *Client) readFromConn(ctx context.Context, conn *net.TCPConn, dataChan c
 			return
 		}
 
-		total += readSize
+		readTotal += readSize
 
-		log.DebugContext(ctx, "read data", slog.Int("size", readSize), slog.Int("total", total))
+		log.DebugContext(ctx, "read data", slog.Int("size", readSize), slog.Int("total", readTotal))
+
+		if c.cfg.Echo && !writeClosed {
+			writeSize, err := conn.Write(buf)
+			if err != nil {
+				if err == io.EOF {
+					log.InfoContext(ctx, "got EOF in writer", slog.Int("total", writeTotal))
+				} else {
+					log.ErrorContext(ctx, "failed to write data", slog.Any("error", err))
+				}
+				writeClosed = true
+			}
+			writeTotal += writeSize
+			log.DebugContext(ctx, "write back data", slog.Int("size", writeSize), slog.Int("total", writeTotal))
+		}
 
 		// dataChan <- buf[:readSize]
 	}

@@ -26,6 +26,7 @@ func init() {
 	clientCmd.Flags().DurationVarP(&clientCfg.ReadTimeout, "read-timeout", "r", time.Minute*10, "Read timeout to close connection")
 	clientCmd.Flags().DurationVarP(&clientCfg.WriteTimeout, "write-timeout", "w", time.Minute*10, "Write timeout to close connection")
 	clientCmd.Flags().IntVarP(&clientCfg.BufSize, "buf-size", "b", 1024, "Buffer size to read")
+	clientCmd.Flags().BoolVar(&clientCfg.Echo, "echo", false, "Run as echo client")
 	clientCmd.Flags().StringVar(&clientCfg.LogLevel, "log-level", "info", "Log level(debug, info, warn, error)")
 }
 

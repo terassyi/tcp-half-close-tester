@@ -12,6 +12,7 @@ type Config struct {
 	WriteTimeout time.Duration
 	ReadTimeout  time.Duration
 	BufSize      int
+	Echo         bool
 	LogLevel     string
 }
 
