@@ -26,3 +26,13 @@ mod:
 .PHONY: build
 build:
 	$(GO) build $(GO_BUILD_OPT) -o ./bin/tcp-half-close-tester .
+
+DOCKER=docker
+DOCKER_FILE=./Dockerfile
+DOCKER_REPO=ghcr.io/terassyi
+DOCKER_TAG=dev
+DOCKER_CONTEXT=.
+
+.PHONY: docker
+docker:
+	$(DOCKER) image build -f $(DOCKER_FILE) -t $(DOCKER_REPO)/tcp-keepalive:$(DOCKER_TAG) $(DOCKER_CONTEXT)
