@@ -2,6 +2,7 @@ package server
 
 import (
 	"net"
+	"time"
 
 	"github.com/terassyi/tcp-half-close-tester/internal/logutils"
 )
@@ -10,6 +11,7 @@ type Config struct {
 	Listen   string
 	File     string
 	Chunk    int
+	Interval time.Duration
 	LogLevel string
 }
 

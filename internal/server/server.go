@@ -80,7 +80,7 @@ func (s *Server) Run(ctx context.Context) error {
 				closeWriteChan <- struct{}{}
 			}()
 
-			streamer := streamer.New(conn, file, s.cfg.Chunk, log)
+			streamer := streamer.New(conn, file, s.cfg.Chunk, s.cfg.Interval, log)
 
 			if err := streamer.Stream(ctx); err != nil {
 				log.ErrorContext(ctx, "failed to stream data", slog.Any("error", err))

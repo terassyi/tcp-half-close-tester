@@ -17,6 +17,7 @@ Flags:
   -c, --chunk int          Chunk size to write (default 1024)
   -f, --file string        File path to send
   -h, --help               help for server
+  -i, --interval duration   Interval to write data
   -l, --listen string      Listen address:port (default "0.0.0.0:4000")
       --log-level string   Log level(debug, info, warn, error) (default "info")
 ```

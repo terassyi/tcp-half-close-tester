@@ -25,6 +25,7 @@ func init() {
 	serverCmd.Flags().StringVarP(&serverCfg.File, "file", "f", "", "File path to send")
 	serverCmd.Flags().StringVarP(&serverCfg.Listen, "listen", "l", "0.0.0.0:4000", "Listen address:port")
 	serverCmd.Flags().IntVarP(&serverCfg.Chunk, "chunk", "c", 1024, "Chunk size to write")
+	serverCmd.Flags().DurationVarP(&serverCfg.Interval, "interval", "i", time.Second*0, "Interval to write data")
 	serverCmd.Flags().StringVar(&serverCfg.LogLevel, "log-level", "info", "Log level(debug, info, warn, error)")
 }
 

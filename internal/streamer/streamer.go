@@ -6,17 +6,19 @@ import (
 	"log/slog"
 	"net"
 	"os"
+	"time"
 )
 
 type Streamer struct {
-	conn   *net.TCPConn
-	file   *os.File
-	chunk  int
-	logger *slog.Logger
+	conn     *net.TCPConn
+	file     *os.File
+	chunk    int
+	interval time.Duration
+	logger   *slog.Logger
 }
 
-func New(conn *net.TCPConn, file *os.File, chunkSize int, logger *slog.Logger) *Streamer {
-	return &Streamer{conn: conn, file: file, chunk: chunkSize, logger: logger}
+func New(conn *net.TCPConn, file *os.File, chunkSize int, interval time.Duration, logger *slog.Logger) *Streamer {
+	return &Streamer{conn: conn, file: file, chunk: chunkSize, interval: interval, logger: logger}
 }
 
 func (s *Streamer) Stream(ctx context.Context) error {
@@ -67,6 +69,11 @@ func (s *Streamer) streamWithChunk(ctx context.Context) error {
 
 		total += writeSize
 		s.logger.DebugContext(ctx, "streaming data", slog.Int("size", writeSize), slog.Int("total", total))
+
+		// wait if interval is set
+		if s.interval.Seconds() != 0 {
+			time.Sleep(s.interval)
+		}
 
 	}
 
